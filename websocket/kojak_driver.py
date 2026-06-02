@@ -8,7 +8,7 @@ import logging
 class KojakDriver:
     """
     Python driver for Integrated Biometrics Kojak Scanner.
-    Based on reverse engineering of IBScanUltimate.dll.
+    Based on IBScanUltimate.dll.
     Protocol: USB Bulk Transfer.
     VID: 0x113F
     PID: 0x1300
@@ -21,7 +21,7 @@ class KojakDriver:
     CMD_CAPTURE = 0x77
     CMD_GET_VERSION = 0x05
     
-    # Sequence 1 (Lines 77-294) from trace.txt
+    # Sequence 1
     # Includes preamble (0b...0d) and 0x05 status polls.
     # This sequence leads to the 4MB data read in the trace.
     CAPTURE_SEQ = [
@@ -231,7 +231,7 @@ class KojakDriver:
         except:
             self.logger.debug("Interface 0 already claimed or could not claim")
 
-        # CRITICAL: Test endpoint reads (from new trace analysis)
+        # Test endpoint reads (from new trace analysis)
         # The official driver tests both EP 0x81 and 0x88 before initialization
         self.logger.debug("Testing endpoint 0x81 (Wake-up read)...")
         try:
@@ -347,7 +347,7 @@ class KojakDriver:
 
     def capture_image(self, scan_type=1):
         """
-        Captures an image using the reverse-engineered sequence 1 (Lines 77-294).
+        Captures an image using the Sequence 1.
         """
         self.logger.info("Starting Capture Sequence (Seq 1 + Preamble)...")
         
@@ -368,7 +368,7 @@ class KojakDriver:
                 self.bp_out.write(cmd, timeout=100)
                 
                 # Handling interleaved reads
-                # If command starts with 0x05 (Status Poll), we MUST read a response (usually 1 byte).
+                # If command starts with 0x05 (Status Poll), must read a response (usually 1 byte) for validity.
                 if cmd[0] == 0x05:
                     try:
                         resp = self.bp_in.read(1, timeout=100)

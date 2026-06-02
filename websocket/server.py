@@ -18,9 +18,8 @@ from logging.handlers import TimedRotatingFileHandler
 log_file = "/var/log/portaprint.log"
 # Check writability, fallback to local if needed (e.g. dev/mac)
 if not os.path.exists(log_file):
-    # Try to create it if we have permission (unlikely unless root or special setup)
-    # We rely on install script to create/chown it usually.
-    # If we can't write to /var/log, fallback to cwd
+    # Try to create if we have permission
+    # If /var/log isn't writable fallback to cwd
     if not os.access("/var/log", os.W_OK):
         log_file = "portaprint_server.log"
 
@@ -66,7 +65,6 @@ class PortaPrintServer:
 
     async def handle_index(self, request):
         base_path = os.path.dirname(os.path.abspath(__file__))
-        # UI is now in userview parallel to websocket
         project_root = os.path.dirname(base_path)
         return web.FileResponse(os.path.join(project_root, 'userview', 'index.html'))
 
@@ -130,9 +128,7 @@ class PortaPrintServer:
             }))
 
             # Attempt to init scanner on first connection if needed
-            # await self.init_scanner() # Maybe wait for explicit INIT or just do it? 
-            # Requirements say "instantly open the web socket" -> implies ready.
-            # Let's do it lazily or when requested, but INIT was common in previous usage.
+
 
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
@@ -159,7 +155,6 @@ class PortaPrintServer:
 
         if action == "GET_SYSTEM_INFO":
             ip = self.wifi.get_ip_address()
-            # Logic to determine if "wifi needed": if IP is loopback or self-assigned
             wifi_needed = (ip == "127.0.0.1" or ip.startswith("169.254"))
             await ws.send_str(json.dumps({
                 "type": "system_info",
@@ -167,15 +162,6 @@ class PortaPrintServer:
                 "wifi_needed": wifi_needed,
                 "connected": not wifi_needed
             }))
-            # Notify everyone else that a generic client connected? 
-            # Or is this intended for the "Remote Client"?
-            # If the remote client connects, it receives this too.
-            # Wait, the UI uses this to display IP.
-
-            # Special logic: If this message came from a remote IP (not localhost), 
-            # we can tell the Local UI that "Target Connected".
-            # request.remote doesn't work easily inside this method unless passed.
-            # For now, we assume all clients are equal.
             pass
 
         elif action == "WIFI_SCAN":
@@ -216,9 +202,6 @@ class PortaPrintServer:
 
         elif action == "EXIT_APP":
             logger.info("Exit command received.")
-            # Graceful shutdown?
-            # web.GracefulExit ?
-            # For now just log it. In a real kiosk, this might kill the browser or the py script.
             os._exit(0) 
 
         elif action == "INIT":
@@ -236,7 +219,6 @@ class PortaPrintServer:
         logger.info(f"Starting capture with param: {param}")
         await self.broadcast({"type": "status", "message": "Starting Capture...", "scan_param": param})
         
-        # User requested aggressive re-initialization to prevent driver hang
         if self.scanner:
             try:
                 logger.info("Forcing scanner close/re-init sequence...")
@@ -246,7 +228,7 @@ class PortaPrintServer:
             finally:
                 self.scanner = None
         
-        # Ensure scanner is ready (will create new instance and open)
+        # Ensure scanner is ready
         await self.init_scanner()
         
         if self.scanner and self.scanner.is_open:

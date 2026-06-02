@@ -1,11 +1,4 @@
 #!/bin/bash
-
-# Portaprint Installation Script
-# Adheres to "Scripting" and "Design" rules:
-# 1. Complete scripting of install and maintenance.
-# 2. Configures environment (venv, permissions).
-# 3. Sets up display rules (no sleep, kiosk mode).
-
 set -e
 
 echo ">>> Starting Portaprint Installation..."
@@ -49,8 +42,6 @@ fi
 # 3. USB Permissions (for Scanner)
 echo ">>> Configuring USB Permissions..."
 # Create a udev rule for IB scanners if not exists
-# Integrated Biometrics Vendor ID: 0x1134 (example commonly used, depends on exact Kojak VID/PID)
-# Using 0666 for simplicity in kiosk mode
 echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="1134", MODE="0666"' | sudo tee /etc/udev/rules.d/99-ib-scanner.rules > /dev/null
 sudo udevadm control --reload-rules
 sudo udevadm trigger
@@ -58,18 +49,14 @@ sudo udevadm trigger
 # 4. Display & Power Management (Rule: No Sleep)
 echo ">>> Configuring Display Settings (No Sleep)..."
 
-# Handle Wayfire (Wayland) if present - common on RPi Bookworm/Trixie
+# Handle Wayfire/Wayland if present
 WAYFIRE_CONFIG="$HOME/.config/wayfire.ini"
 if [ -d "$HOME/.config" ]; then
     # Ensure idle is disabled in Wayfire
-    # We append to file if file exists, or create it
     mkdir -p "$HOME/.config"
     if grep -q "\[idle\]" "$WAYFIRE_CONFIG" 2>/dev/null; then
         echo "Wayfire config exists."
-        # Ideally we'd sed replace, but appending override might work or be complex.
-        # Simplest: make sure dpms is off via command at runtime too.
     else
-        # minimal config addition to disable idle if using Wayfire
         echo "" >> "$WAYFIRE_CONFIG"
         echo "[idle]" >> "$WAYFIRE_CONFIG"
         echo "dpms_timeout = 0" >> "$WAYFIRE_CONFIG"
@@ -82,9 +69,8 @@ STARTUP_SCRIPT="$HOME/start_portaprint.sh"
 echo ">>> Display power management disabled (Wayfire config updated / runtime xset planned)."
 
 
-# 5. Application Autostart (Rule: Zero touch)
+# 5. Application Autostart
 echo ">>> Configuring Application Autostart..."
-# We create a separate startup script that launches the server and then the browser
 
 cat > "$STARTUP_SCRIPT" <<EOL
 #!/bin/bash
@@ -126,7 +112,7 @@ EOL
 chmod +x "$STARTUP_SCRIPT"
 
 
-# Create .desktop file for Autostart (Works on LXDE, Pixel, GNOME, Wayland/Labwc)
+# Create .desktop file for Autostart
 AUTOSTART_DIR="$HOME/.config/autostart"
 mkdir -p "$AUTOSTART_DIR"
 

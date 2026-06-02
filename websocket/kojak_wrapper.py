@@ -88,8 +88,6 @@ def load_library():
     lib_name = "libIBScanUltimate.so"
     found_path = None
     
-    # ... (search logic remains per previous edit, abbreviated for brevity in this replacement block if possible, but I will include it all to be safe)
-    
     logger.info(f"Searching for {lib_name}...")
     for root, dirs, files in os.walk(cwd):
         if lib_name in files:
@@ -108,7 +106,7 @@ def load_library():
         logger.error(f"Could not find {lib_name} in {cwd} or standard paths.")
         return None
 
-    # 2. Try to load ALL dependencies (Explicitly)
+    # 2. Load all dependencies
     lib_dir = os.path.dirname(found_path)
     dependencies = ["libusb-1.0.so", "libuvc.so", "libAKXUS.so.2"]
     
@@ -170,7 +168,7 @@ class KojakScanner:
         self.lib.IBSU_RegisterCallbacks.argtypes = [c_int, c_int, c_void_p, c_void_p]
         self.lib.IBSU_RegisterCallbacks.restype = c_int
 
-    # ... (get_device_count, open, close remain similar) ...
+    # get_device_count, open, close remain similar
     def get_device_count(self):
         count = c_int(0)
         res = self.lib.IBSU_GetDeviceCount(byref(count))

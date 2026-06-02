@@ -41,14 +41,6 @@ class WifiManager:
                 for line in lines:
                     line = line.strip()
                     if not line: continue
-                    # Rough parsing of airport output which is column based
-                    # SSID BSSID RSSI CHANNEL HT CC SECURITY
-                    # We only care about SSID and roughly signal. 
-                    # Airport signal is RSSI (e.g. -60). Map to 0-100% roughly.
-                    # This is a bit tricky because SSID can have spaces.
-                    # But usually BSSID is the first MAC address like xx:xx:xx...
-                    
-                    # Simple heuristic: Split by spaces, look for RSSI (negative integer)
                     parts = line.split()
                     rssi = -100
                     ssid = "Unknown"
@@ -97,14 +89,7 @@ class WifiManager:
                         sline = line.strip()
                         if not sline: continue
                         
-                        # Heuristic: SSID lines end with ":" and don't contain other keys
-                        if line.endswith(":"):
-                            # Check indentation or content
-                            # Generally properties are indented deeper
-                            # But system_profiler is tricky.
-                            # "        SpecificSSID:" (8 spaces)
-                            # "          PHY Mode: ..." (10 spaces)
-                            
+                        if line.endswith(":"):                            
                             indent = len(line) - len(line.lstrip())
                             if indent == 12: # Approximate
                                 current_ssid = sline[:-1]
@@ -127,11 +112,8 @@ class WifiManager:
                         
                 except Exception as ex:
                     logger.error(f"system_profiler scan failed: {ex}")
-
-                # Fallthrough to mock data if scan fails
                 
         if self.os_type != "Linux":
-            # Mock data for non-Linux dev environment
             return [
                 {"ssid": "PortaPrint_Test_5G", "signal": 95},
                 {"ssid": "Guest_Network", "signal": 70},
@@ -181,7 +163,6 @@ class WifiManager:
         logger.info(f"Attempting to connect to {ssid}")
         
         if self.os_type != "Linux":
-            # Mock connection
             import time
             time.sleep(2)
             return True

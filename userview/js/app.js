@@ -25,7 +25,7 @@ const App = {
 
         // Function to dim the screen
         const goDim = () => {
-            // NEVER dim if we are scanning
+            // Never dim if we are scanning
             if (this.currentView === 'view-scanning') return;
 
             body.classList.remove('user-active');
@@ -47,13 +47,6 @@ const App = {
             if (this.currentView === 'view-scanning') {
                 return; // No timeout while scanning
             }
-
-            // If we just finished? Logic handled by switchView mostly, 
-            // but here we just check if we are NOT scanning.
-            // If the user said "2 minutes after completion", we might need a flag.
-            // For now, let's use standard logic: 
-            // If interactive (wifi/keyboard), maybe longer? 
-            // Sticking to basic rule: Ready = Timeout.
 
             activityTimeout = setTimeout(goDim, delay);
         };
@@ -81,7 +74,6 @@ const App = {
         console.log("Connecting to WebSocket...");
         // Assuming the server is running on the hostname (localhost) port 8888
         const host = window.location.hostname || 'localhost';
-        // FIXED: Added /ws to the URL to match server route
         this.socket = new WebSocket(`ws://${host}:8888/ws`);
 
         this.socket.onopen = () => {
@@ -236,9 +228,6 @@ const App = {
                 console.log("Updating visualizer with param:", param);
                 this.updateScanVisualizer(param);
             } else {
-                // If param is missing, we might want to default to something or just show full hand?
-                // Visualizer defaults to full hand if logic fails, so calling it with empty might be safer?
-                // But let's check.
                 console.log("No param for visualizer, showing default.");
                 this.updateScanVisualizer(null); // Force default reset
             }
@@ -263,9 +252,6 @@ const App = {
             else if (param === 'L_SLAP') p = 14;
             else if (param === 'THUMBS') p = 15;
             else {
-                // PARAM MISSING OR INVALID
-                // User Requirement: NEVER show generic hand. MUST select a finger.
-                // We default to Right Index (2) as the most common single finger scan.
                 console.warn("Invalid/Missing scan param. Defaulting to Right Index (2).");
                 p = 2;
             }
@@ -274,10 +260,6 @@ const App = {
         let side = 'left';
         let finger = '';
         let text = "Finger";
-
-        // Logic Mapping
-        // Right Hand: 1-5, 13
-        // Thumbs (15) -> We'll use Right Thumb for now as per previous logic
         if ((p >= 1 && p <= 5) || p === 13 || p === 15) {
             side = 'right';
         }
@@ -471,9 +453,6 @@ const App = {
 
                 isConnectingMode = true;
                 updateNav();
-                // Instead of focus, maybe just wait for user to tap input?
-                // Or auto-open keyboard:
-                // openKeyboard('');
             }
         });
 
@@ -514,7 +493,7 @@ const App = {
 
     handleWifiStatus(data) {
         if (data.connected) {
-            // Connected successfully!
+            // Connected successfully
             // Wait for IP update
             setTimeout(() => this.send({ action: "GET_SYSTEM_INFO" }), 2000);
         } else {

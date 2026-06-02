@@ -108,17 +108,7 @@ body.user-active .glass-panel {
     filter: grayscale(0%);
 }
 
-/* Elements that should ALWAYS be visible (IP & QR) 
-   We target them specifically to override parent opacity if needed, 
-   or we restructure. Since opacity affects children, we might need a different approach.
-   Better approach: Keep wrapper visible, dim the *background* and *auxiliary text*. 
-*/
-
-/* REVISED STRATEGY for CSS-only dimming while keeping IP visible: 
-   We can't easily make a child opaque if parent is transparent. 
-   So we will keep glass-panel visible but dim its contents, 
-   EXCEPT for specific high-vis elements.
-*/
+/* Elements that should ALWAYS be visible (IP & QR) */
 
 .glass-panel {
     opacity: 1;
@@ -286,8 +276,6 @@ h1 {
 }
 
 /* Scan Visualizer Customization */
-/* Scan Visualizer Customization */
-/* Scan Visualizer Customization */
 .scan-visualizer {
     position: relative;
     display: flex;
@@ -328,7 +316,6 @@ h1 {
     pointer-events: none;
     z-index: 10;
     display: none;
-    /* DEBUG: Hiding overlay to ensure image visibility */
 }
 
 @keyframes scan-vertical {
