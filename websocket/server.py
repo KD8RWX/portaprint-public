@@ -74,6 +74,12 @@ class PortaPrintServer:
         self.app.router.add_static('/assets', os.path.join(ui_path, 'assets'))
 
     async def handle_index(self, request):
+        # EFTSuite's legacy scanner helper connects to ws://host:8888/.
+        # Serve WebSockets at the root only for valid upgrade requests,
+        # while preserving the existing HTML page for ordinary HTTP GETs.
+        if web.WebSocketResponse().can_prepare(request).ok:
+            return await self.handle_websocket(request)
+
         base_path = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(base_path)
         return web.FileResponse(os.path.join(project_root, 'userview', 'index.html'))
